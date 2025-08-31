@@ -6,10 +6,7 @@ import { features } from "@/data/features";
 import { howItWorks } from "@/data/howItWorks";
 import { testimonial } from "@/data/testimonial";
 import { faqs } from "@/data/faqs";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card"
+import {Card,CardContent} from "@/components/ui/card"
 import {ArrowRight} from "lucide-react"
 import {Accordion,AccordionTrigger,AccordionItem,AccordionContent} from "@/components/ui/accordion"
 
