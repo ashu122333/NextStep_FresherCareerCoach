@@ -3,6 +3,7 @@ import "./globals.css";
 
 import {ClerkProvider,} from '@clerk/nextjs'
 import { dark } from "@clerk/themes";
+import { Toaster } from "sonner";
 
 
 import {ThemeProvider} from "@/components/theme-proider";
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
             <Header />
 
             <main className="min-h-screen">{children}</main>
+            <Toaster richColors />
 
             {/* footer */}
             <footer className="bg-muted/50 py-12">
