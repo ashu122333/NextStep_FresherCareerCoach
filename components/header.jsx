@@ -76,7 +76,7 @@ async function  Header () {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem>
-                    <Link href={"/mock-test"} className="flex items-center gap-2">
+                    <Link href={"/mocks"} className="flex items-center gap-2">
                         <GraduationCapIcon className="h-4 w-4"/>
                         <span> Mock Test </span>  
                     </Link>

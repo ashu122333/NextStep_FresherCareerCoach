@@ -7,10 +7,10 @@ export default function Test() {
   return (
     <div className="container mx-auto space-y-4 py-6">
       <div className="flex flex-col space-y-2 mx-2">
-        <Link href="/mock-test">
+        <Link href="/mocks">
           <Button variant="link" className="gap-2 pl-0">
             <ArrowLeft className="h-4 w-4" />
-            Back to Test Preparation
+            Back to Mocks Dashboard
           </Button>
         </Link>
 
