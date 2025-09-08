@@ -16,11 +16,13 @@ import { generateQuiz, saveQuizResult } from "@/actions/interview";
 import QuizResult from "./quiz-result";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
+import { Input } from "@/components/ui/input";
 
 export default function Quiz() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [numQuestions, setNumQuestions] = useState(10);
 
   const {
     loading: generatingQuiz,
@@ -80,8 +82,16 @@ export default function Quiz() {
     setCurrentQuestion(0);
     setAnswers([]);
     setShowExplanation(false);
-    generateQuizFn();
     setResultData(null);
+    generateQuizFn(numQuestions);
+  };
+  
+  const handleNumQuestionsChange = (e) => {
+    setNumQuestions(Number(e.target.value));
+  };
+
+  const handleStartQuiz = () => {
+    generateQuizFn(numQuestions);
   };
 
   if (generatingQuiz) {
@@ -105,12 +115,24 @@ export default function Quiz() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            This quiz contains 10 questions specific to your industry and
+            This quiz contains questions specific to your industry and
             skills. Take your time and choose the best answer for each question.
           </p>
+          <div className="mt-4">
+            <Label htmlFor="num-questions">Number of Questions</Label>
+            <Input
+              id="num-questions"
+              type="number"
+              min={1}
+              max={50}
+              value={numQuestions}
+              onChange={handleNumQuestionsChange}
+              className="w-32 mt-2"
+            />
+          </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={generateQuizFn} className="w-full">
+          <Button onClick={handleStartQuiz} className="w-full">
             Start Quiz
           </Button>
         </CardFooter>

@@ -9,7 +9,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 
 
-export async function generateQuiz() {
+export async function generateQuiz(numQuestions=10) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -24,7 +24,7 @@ export async function generateQuiz() {
   if (!user) throw new Error("User not found");
 
   const prompt = `
-    Generate 10 technical interview questions for a ${
+    Generate ${numQuestions} technical interview questions for a ${
       user.industry
     } professional${
     user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
@@ -158,3 +158,5 @@ export async function getAssessments() {
     throw new Error("Failed to fetch assessments");
   }
 }
+
+
