@@ -3,7 +3,7 @@ import { UserPlus, FileEdit, Users, LineChart } from "lucide-react";
 export const howItWorks = [
   {
     title: "Professional Onboarding",
-    description: "Share your industry and expertise for personalized guidance",
+    description: "Share your skills and interest for personalized guidance",
     icon: <UserPlus className="w-8 h-8 text-primary" />,
   },
   {
@@ -14,7 +14,7 @@ export const howItWorks = [
   {
     title: "Prepare for Interviews",
     description:
-      "Practice with AI-powered mock interviews tailored to your role",
+      "Practice with AI-powered mock tests and interviews tailored to your role",
     icon: <Users className="w-8 h-8 text-primary" />,
   },
   {

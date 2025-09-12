@@ -7,6 +7,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+
+
 export const generateAIInsights = async (industry) => {
 const prompt = `
   Analyze the current state of the ${industry} industry. Provide a comprehensive analysis with a primary focus on the major Indian market (cities like Bengaluru, Mumbai, Delhi-NCR, Hyderabad) and a comparative perspective on key international markets (e.g., USA, Europe). The output should be in ONLY the following JSON format without any additional notes or explanations:

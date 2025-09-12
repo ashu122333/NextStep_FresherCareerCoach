@@ -8,11 +8,13 @@ const IndustryInsights = async () => {
     // check if user is alread onboarded
   
     const {isOnboarded} = await getUserOnboardingStatus();
-    const insights = await getIndustryInsights();
+    
 
     if (!isOnboarded) redirect("/onboarding");
+
+    const insights = await getIndustryInsights();
   return (
-    <div className='container max-auto'>
+    <div className='container mx-auto'>
       <DashboardView insights={insights} />
     </div>
   )

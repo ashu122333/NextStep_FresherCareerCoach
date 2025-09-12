@@ -1,4 +1,4 @@
-import { BrainCircuit, Briefcase, LineChart, ScrollText } from "lucide-react";
+import { BrainCircuit, Briefcase, LineChart,FileText, ScrollText,ClipboardCheck,Mic } from "lucide-react";
 
 export const features = [
   {
@@ -7,12 +7,16 @@ export const features = [
     description:
       "Get personalized career advice and insights powered by advanced AI technology.",
   },
-  {
-    icon: <Briefcase className="w-10 h-10 mb-4 text-primary" />,
-    title: "Interview Preparation",
-    description:
-      "Practice with role-specific questions and get instant feedback to improve your performance.",
-  },
+{
+  icon: <ClipboardCheck className="w-10 h-10 mb-4 text-primary" />,
+  title: "Mock Test Preparation",
+  description: "AI-generated MCQ tests with instant feedback and improvement tips.",
+},
+{
+  icon: <Mic className="w-10 h-10 mb-4 text-primary" />,
+  title: "Mock Interview Preparation",
+  description: "Voice-to-voice AI interviews with end-of-session feedback.",
+},
   {
     icon: <LineChart className="w-10 h-10 mb-4 text-primary" />,
     title: "Industry Insights",
@@ -24,4 +28,20 @@ export const features = [
     title: "Smart Resume Creation",
     description: "Generate ATS-optimized resumes with AI assistance.",
   },
+  {
+  icon: <FileText className="w-10 h-10 mb-4 text-primary" />,
+  title: "Smart Cover Letter",
+  description: "AI-generated cover letters tailored to user profile and job description.",
+},
 ];
+
+
+
+const past=[
+   {
+    icon: <Briefcase className="w-10 h-10 mb-4 text-primary" />,
+    title: "Interview Preparation",
+    description:
+      "Practice with skill-specific questions and get instant feedback to improve your performance.",
+  },
+]

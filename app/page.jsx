@@ -23,7 +23,7 @@ export default function Home() {
       <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-tighter text-center mb-12">
-             Powerful Tools for Your Career Growth</h2>
+             Your Career Journey Starts Here</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {features.map((feature,index) => {
               return (
@@ -186,7 +186,7 @@ export default function Home() {
               Ready to Accelerate Your Career?
             </h2>
             <p className="mx-auto max-w-[600px] text-primary-foreground/80 md:text-xl">
-              Join thousands of professionals who are advancing their careers
+              Join thousands of students who are advancing their careers
               with AI-powered guidance.
             </p>
             <Link href="/dashboard" passHref>
@@ -200,7 +200,9 @@ export default function Home() {
             </Link>
           </div>
         </div>
-      </section>                      
+      </section>   
+
+
 
     </div>
   )
