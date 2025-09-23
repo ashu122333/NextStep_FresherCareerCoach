@@ -83,7 +83,7 @@ async function  Header () {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem>
-                    <Link href={"/mocks/interview"} className="flex items-center gap-2">
+                    <Link href={"https://prep-wise-olive.vercel.app/sign-in"} className="flex items-center gap-2">
                         <PictureInPicture2 className="h-4 w-4"/>
                         <span>Mock Interview</span>  
                     </Link>

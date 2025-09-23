@@ -181,6 +181,34 @@ const OnboardingForm = ({ industries }) => {
               )}
             </div>
 
+            
+            <div className="space-y-2">
+              <Label htmlFor="github">GitHub Profile</Label>
+              <Input
+                id="github"
+                type="url"
+                placeholder="https://github.com/yourusername"
+                {...register("github")}
+              />
+              {errors.github && (
+                <p className="text-sm text-red-500">{errors.github.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="linkedin">LinkedIn Profile</Label>
+              <Input
+                id="linkedin"
+                type="url"
+                placeholder="https://linkedin.com/in/yourusername"
+                {...register("linkedin")}
+              />
+              {errors.linkedin && (
+                <p className="text-sm text-red-500">{errors.linkedin.message}</p>
+              )}
+            </div>
+
+
             <div className="space-y-2">
               <Label htmlFor="bio">Professional Bio</Label>
               <Textarea

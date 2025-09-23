@@ -69,20 +69,22 @@ export async function updateUser(data) {
             experience: data.experience,
             bio: data.bio,
             skills: data.skills,
+            github: data.github,      // <-- Added
+            linkedin: data.linkedin,  // <-- Added
           },
         });
 
         return { updatedUser, industryInsight };
       },
       {
-        timeout: 20000, // default: 5000
+        timeout: 30000, // default: 5000
       }
     );
 
     revalidatePath("/");
     return{ success: true, ...result};
   } catch (error) {
-    console.error("Error updating user and industry:", error.message);
+    console.error("Error updating user and industry:", error);
     throw new Error("Failed to update profile");
   }
 }

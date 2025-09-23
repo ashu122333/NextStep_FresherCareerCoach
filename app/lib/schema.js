@@ -25,6 +25,8 @@ export const onboardingSchema = z.object({
           .filter(Boolean)
       : undefined
   ),
+  github: z.string().url("Please enter a valid GitHub URL").optional(),    // <-- Added
+  linkedin: z.string().url("Please enter a valid LinkedIn URL").optional(), // <-- Added
 });
 
 
