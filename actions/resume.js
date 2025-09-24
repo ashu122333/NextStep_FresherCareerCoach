@@ -58,6 +58,11 @@ export async function getResume() {
     where: {
       userId: user.id,
     },
+    select: {
+      content: true,
+      atsScore: true,
+      feedback: true,
+    }
   });
 }
 
@@ -101,5 +106,118 @@ export async function improveWithAI({ current, type }) {
   } catch (error) {
     console.error("Error improving content:", error);
     throw new Error("Failed to improve content");
+  }
+}
+
+
+export async function analyzeResumeWithAI({ resumeContent, jobDescription }) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  const prompt = `
+    You are an expert ATS (Applicant Tracking System) and resume reviewer. 
+    Your task is to analyze the resume against the job description and return ONLY a JSON response.
+    
+    Resume Content:
+    ${resumeContent}
+    
+    Job Description:
+    ${jobDescription}
+    
+    Analyze and return a JSON object with exactly this structure:
+    {
+      "score": <number between 0-100>,
+      "feedback": {
+        "summary": "<brief overview>",
+        "skillsAlignment": "<skills match analysis>",
+        "experienceMatch": "<experience relevance>",
+        "improvements": "<key improvement areas>"
+      }
+    }
+
+    IMPORTANT: 
+    1. Return ONLY the JSON object, no additional text or explanations
+    2. Ensure all string values are properly escaped
+    3. Use proper JSON format with double quotes for keys and string values
+    4. Do not include any markdown or formatting
+  `;
+
+  try {
+    // Generate AI analysis
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const analysisText = response.text().trim();
+
+    // Log the raw response for debugging
+    console.log('Raw AI Response:', analysisText);
+
+    // Clean the response - remove any potential markdown or extra characters
+    const cleanedText = analysisText
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
+
+    // Parse the AI response
+    let analysis;
+    try {
+      analysis = JSON.parse(cleanedText);
+    } catch (e) {
+      console.error('JSON Parse Error:', e);
+      console.error('Cleaned Text:', cleanedText);
+      throw new Error(`Failed to parse AI response: ${e.message}`);
+    }
+
+    // Validate the analysis structure
+    if (!analysis || typeof analysis !== 'object') {
+      throw new Error('Invalid response format: not an object');
+    }
+
+    if (typeof analysis.score !== 'number' || analysis.score < 0 || analysis.score > 100) {
+      throw new Error('Invalid score value');
+    }
+
+    if (!analysis.feedback || typeof analysis.feedback !== 'object') {
+      throw new Error('Invalid feedback format');
+    }
+
+    const requiredFields = ['summary', 'skillsAlignment', 'experienceMatch', 'improvements'];
+    for (const field of requiredFields) {
+      if (typeof analysis.feedback[field] !== 'string') {
+        throw new Error(`Missing or invalid feedback field: ${field}`);
+      }
+    }
+
+    // Update resume record with score and feedback
+    const resume = await db.resume.upsert({
+      where: {
+        userId: user.id,
+      },
+      update: {
+        atsScore: analysis.score,
+        feedback: JSON.stringify(analysis.feedback),
+      },
+      create: {
+        userId: user.id,
+        content: resumeContent,
+        atsScore: analysis.score,
+        feedback: JSON.stringify(analysis.feedback),
+      },
+    });
+
+    return {
+      score: analysis.score,
+      feedback: analysis.feedback,
+    };
+
+  } catch (error) {
+    console.error('Resume analysis error:', error);
+    // Return a more specific error message
+    throw new Error(`Resume analysis failed: ${error.message}`);
   }
 }

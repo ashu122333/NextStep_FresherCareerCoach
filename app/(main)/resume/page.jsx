@@ -6,7 +6,13 @@ export default async function ResumePage() {
 
   return (
     <div className="container mx-auto py-6">
-      <ResumeBuilder initialContent={resume?.content} />
+      <ResumeBuilder
+        initialContent={{
+          content: resume?.content,
+          atsScore: resume?.atsScore,
+          feedback: resume?.feedback,
+        }}
+      />
     </div>
   );
 }

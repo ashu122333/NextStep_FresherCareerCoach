@@ -10,6 +10,8 @@ import {
   Loader2,
   Monitor,
   Save,
+  Sparkles,
+  FileSearch,
 } from "lucide-react";
 import { toast } from "sonner";
 import MDEditor from "@uiw/react-md-editor";
@@ -23,16 +25,34 @@ import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { analyzeResumeWithAI } from "@/actions/resume";
 // import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
-
-
-
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
-  const [previewContent, setPreviewContent] = useState(initialContent);
+  // Fix: Extract content from initialContent or use empty string as fallback
+  const [previewContent, setPreviewContent] = useState(initialContent?.content || "");
   const { user } = useUser();
   const [resumeMode, setResumeMode] = useState("preview");
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [jobDescription, setJobDescription] = useState("");
+  const [showSavedAnalysis, setShowSavedAnalysis] = useState(false);
+  const [savedAnalysis, setSavedAnalysis] = useState({
+    score: initialContent?.atsScore,
+    feedback: initialContent?.feedback ? JSON.parse(initialContent.feedback) : null,
+  });
 
   const {
     control,
@@ -70,7 +90,8 @@ export default function ResumeBuilder({ initialContent }) {
   useEffect(() => {
     if (activeTab === "edit") {
       const newContent = getCombinedContent();
-      setPreviewContent(newContent ? newContent : initialContent);
+      // Fix: Use content property or fallback to empty string
+      setPreviewContent(newContent ? newContent : (initialContent?.content || ""));
     }
   }, [formValues, activeTab]);
 
@@ -115,14 +136,12 @@ export default function ResumeBuilder({ initialContent }) {
 
   const [isGenerating, setIsGenerating] = useState(false);
 
-
-
-
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
-        // Dynamic import of html2pdf.js within the function
-      const html2pdf = (await import("html2pdf.js/dist/html2pdf.min.js")).default;
+      // Dynamic import of html2pdf.js within the function
+      const html2pdf = (await import("html2pdf.js/dist/html2pdf.min.js"))
+        .default;
 
       const element = document.getElementById("resume-pdf");
       const opt = {
@@ -152,6 +171,22 @@ export default function ResumeBuilder({ initialContent }) {
       await saveResumeFn(previewContent);
     } catch (error) {
       console.error("Save error:", error);
+    }
+  };
+
+  const handleAnalyzeResume = async () => {
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeResumeWithAI({
+        resumeContent: previewContent,
+        jobDescription,
+      });
+      setAnalysisResult(result);
+      setShowAnalysis(true);
+    } catch (error) {
+      toast.error(error.message || "Failed to analyze resume");
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -195,9 +230,14 @@ export default function ResumeBuilder({ initialContent }) {
             )}
           </Button>
 
-
+          <Button
+            variant="outline"
+            onClick={() => setShowSavedAnalysis(!showSavedAnalysis)}
+          >
+            <FileSearch className="mr-2 h-4 w-4" />
+            {showSavedAnalysis ? "Hide Saved Analysis" : "Show Saved Analysis"}
+          </Button>
         </div>
-
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -206,17 +246,12 @@ export default function ResumeBuilder({ initialContent }) {
           <TabsTrigger value="preview">Markdown</TabsTrigger>
         </TabsList>
 
-
         <TabsContent value="edit">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-
-
-
             {/* Contact Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Contact Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/50">
-
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
                   <Input
@@ -275,12 +310,8 @@ export default function ResumeBuilder({ initialContent }) {
                     </p>
                   )}
                 </div>
-
               </div>
             </div>
-
-
-
 
             {/* Summary */}
             <div className="space-y-4">
@@ -302,8 +333,6 @@ export default function ResumeBuilder({ initialContent }) {
               )}
             </div>
 
-
-
             {/* Skills */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Skills</h3>
@@ -323,8 +352,6 @@ export default function ResumeBuilder({ initialContent }) {
                 <p className="text-sm text-red-500">{errors.skills.message}</p>
               )}
             </div>
-
-
 
             {/* Experience */}
             <div className="space-y-4">
@@ -347,8 +374,6 @@ export default function ResumeBuilder({ initialContent }) {
               )}
             </div>
 
-
-
             {/* Education */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Education</h3>
@@ -369,8 +394,6 @@ export default function ResumeBuilder({ initialContent }) {
                 </p>
               )}
             </div>
-
-
 
             {/* Projects */}
             <div className="space-y-4">
@@ -394,8 +417,6 @@ export default function ResumeBuilder({ initialContent }) {
             </div>
           </form>
         </TabsContent>
-
-
 
         <TabsContent value="preview">
           {activeTab === "preview" && (
@@ -448,8 +469,135 @@ export default function ResumeBuilder({ initialContent }) {
               />
             </div>
           </div>
+
+          <div className="mb-4 space-y-2">
+            <Textarea
+              placeholder="Paste the job description here to analyze your resume..."
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              className="h-32"
+            />
+            <Button
+              onClick={handleAnalyzeResume}
+              disabled={isAnalyzing || !jobDescription}
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Analyze Resume
+                </>
+              )}
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={showAnalysis} onOpenChange={setShowAnalysis}>
+        <AlertDialogContent className="max-w-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center justify-between">
+              Resume Analysis
+              <Badge variant={analysisResult?.score >= 70 ? "success" : "destructive"}>
+                Score: {analysisResult?.score}/100
+              </Badge>
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <ScrollArea className="h-[60vh] rounded-md border p-4">
+                {analysisResult?.feedback && (
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold">Overall Summary</h3>
+                      <p className="text-sm">
+                        {analysisResult.feedback.summary}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Skills Alignment</h3>
+                      <p className="text-sm">
+                        {analysisResult.feedback.skillsAlignment}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Experience Match</h3>
+                      <p className="text-sm">
+                        {analysisResult.feedback.experienceMatch}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">Suggested Improvements</h3>
+                      <p className="text-sm">
+                        {analysisResult.feedback.improvements}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </ScrollArea>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setShowAnalysis(false)}>
+              Close
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {showSavedAnalysis && savedAnalysis.feedback && (
+        <AlertDialog open={showSavedAnalysis} onOpenChange={setShowSavedAnalysis}>
+          <AlertDialogContent className="max-w-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center justify-between">
+                Previous Resume Analysis
+                <Badge variant={savedAnalysis.score >= 70 ? "success" : "destructive"}>
+                  Score: {savedAnalysis.score}/100
+                </Badge>
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <ScrollArea className="h-[60vh] rounded-md border p-4">
+                  {savedAnalysis.feedback && (
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold">Overall Summary</h3>
+                        <p className="text-sm">
+                          {savedAnalysis.feedback.summary}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Skills Alignment</h3>
+                        <p className="text-sm">
+                          {savedAnalysis.feedback.skillsAlignment}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Experience Match</h3>
+                        <p className="text-sm">
+                          {savedAnalysis.feedback.experienceMatch}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Suggested Improvements</h3>
+                        <p className="text-sm">
+                          {savedAnalysis.feedback.improvements}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </ScrollArea>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button variant="outline" onClick={() => setShowSavedAnalysis(false)}>
+                Close
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
