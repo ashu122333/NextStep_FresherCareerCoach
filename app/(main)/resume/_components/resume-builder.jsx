@@ -38,7 +38,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { analyzeResumeWithAI } from "@/actions/resume";
 // import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
 
-export default function ResumeBuilder({ initialContent }) {
+export default function ResumeBuilder({ initialContent, onSave }) {
   const [activeTab, setActiveTab] = useState("edit");
   // Fix: Extract content from initialContent or use empty string as fallback
   const [previewContent, setPreviewContent] = useState(initialContent?.content || "");
@@ -53,6 +53,7 @@ export default function ResumeBuilder({ initialContent }) {
     score: initialContent?.atsScore,
     feedback: initialContent?.feedback ? JSON.parse(initialContent.feedback) : null,
   });
+  const [title, setTitle] = useState(initialContent?.title || "");
 
   const {
     control,
@@ -162,15 +163,18 @@ export default function ResumeBuilder({ initialContent }) {
 
   const onSubmit = async (data) => {
     try {
-      const formattedContent = previewContent
-        .replace(/\n/g, "\n") // Normalize newlines
-        .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
-        .trim();
-
-      console.log(previewContent, formattedContent);
-      await saveResumeFn(previewContent);
+      const savedResume = await saveResumeFn({
+        title,
+        content: previewContent
+      });
+      
+      if (onSave) {
+        onSave(savedResume);
+      }
+      
+      toast.success("Resume saved successfully!");
     } catch (error) {
-      console.error("Save error:", error);
+      toast.error(error.message || "Failed to save resume");
     }
   };
 
@@ -248,6 +252,18 @@ export default function ResumeBuilder({ initialContent }) {
 
         <TabsContent value="edit">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* Title */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Resume Title</h3>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter a title for your resume"
+                className="max-w-2xl"
+                required
+              />
+            </div>
+
             {/* Contact Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Contact Information</h3>

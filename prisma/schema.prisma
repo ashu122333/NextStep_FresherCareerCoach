@@ -33,9 +33,10 @@ model User{
   skills String[]
   assessments Assessment[]
   interviewAssess InterviewAssess[]
-  resume  Resume?
+  resume  Resume[]
   coverLetter CoverLetter[]
   roadmaps Roadmap[]
+  
 }
 
 model Assessment {
@@ -67,15 +68,21 @@ model InterviewAssess {
   @@index([userId])
 }
 
+// ...existing code...
+
 model Resume {
   id          String    @id @default(cuid())
-  userId      String    @unique    // One resume per user
+  userId      String    // Remove @unique
+  title       String   // Add title field
   user        User      @relation(fields: [userId], references: [id])
-  content     String    @db.Text // Markdown content
+  content     String    @db.Text
   atsScore    Float?
   feedback    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, title])  // Add compound unique constraint
+  @@index([userId])
 }
 
 model CoverLetter {

@@ -11,7 +11,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 
 
-export async function saveResume(content) {
+export async function saveResume({ title, content }) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -24,13 +24,17 @@ export async function saveResume(content) {
   try {
     const resume = await db.resume.upsert({
       where: {
-        userId: user.id,    //i will find the resume based on userId
+        userId_title: {  // Use compound unique constraint
+          userId: user.id,
+          title,
+        },
       },
-      update: {              // if found update the
+      update: {
         content,
       },
-      create: {              // if not found create a new one
+      create: {
         userId: user.id,
+        title,
         content,
       },
     });
@@ -43,6 +47,60 @@ export async function saveResume(content) {
   }
 }
 
+
+export async function getResumes() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  // Add logging to debug the response
+  const resumes = await db.resume.findMany({
+    where: {
+      userId: user.id,
+    },
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      atsScore: true,
+      feedback: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    orderBy: {
+      updatedAt: 'desc'
+    }
+  });
+
+  console.log('Fetched resumes:', resumes); // Add this line for debugging
+  return resumes;
+}
+
+
+export async function deleteResume(id) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error("User not found");
+
+  await db.resume.deleteMany({
+    where: {
+      id,
+      userId: user.id,
+    },
+  });
+
+  revalidatePath("/resume");
+}
 
 export async function getResume() {
   const { userId } = await auth();
@@ -110,7 +168,7 @@ export async function improveWithAI({ current, type }) {
 }
 
 
-export async function analyzeResumeWithAI({ resumeContent, jobDescription }) {
+export async function analyzeResumeWithAI({ resumeContent, jobDescription, title }) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
@@ -196,14 +254,19 @@ export async function analyzeResumeWithAI({ resumeContent, jobDescription }) {
     // Update resume record with score and feedback
     const resume = await db.resume.upsert({
       where: {
-        userId: user.id,
+        userId_title: {
+          userId: user.id,
+          title: title || 'Untitled Resume',
+        },
       },
       update: {
+        content: resumeContent,
         atsScore: analysis.score,
         feedback: JSON.stringify(analysis.feedback),
       },
       create: {
         userId: user.id,
+        title: title || 'Untitled Resume',
         content: resumeContent,
         atsScore: analysis.score,
         feedback: JSON.stringify(analysis.feedback),
