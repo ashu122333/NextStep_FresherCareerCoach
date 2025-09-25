@@ -1,4 +1,4 @@
-import { BrainCircuit, Briefcase, LineChart,FileText, ScrollText,ClipboardCheck,Mic } from "lucide-react";
+import { BrainCircuit, Briefcase, LineChart,FileText, ScrollText,ClipboardCheck,Mic,MapPlus,BotMessageSquare } from "lucide-react";
 
 export const features = [
   {
@@ -32,6 +32,16 @@ export const features = [
   icon: <FileText className="w-10 h-10 mb-4 text-primary" />,
   title: "Smart Cover Letter",
   description: "AI-generated cover letters tailored to user profile and job description.",
+},
+ {
+  icon: <MapPlus className="w-10 h-10 mb-4 text-primary" />,
+  title: "Generate Personalized Roadmap",
+  description: "AI-powered personalized learning roadmap tailored to goals.",
+},
+ {
+  icon: <BotMessageSquare className="w-10 h-10 mb-4 text-primary" />,
+  title: "Personal ChatBot",
+  description: "Contextual AI chat for personalized career support.",
 },
 ];
 

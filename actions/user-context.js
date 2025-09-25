@@ -65,9 +65,13 @@ export async function getUserContext() {
         resume: true,
         coverLetter: {
           orderBy: { createdAt: 'desc' },
-          take: 1,
+          take: 5,
         },
-        industryInsight: true
+        industryInsight: true,
+        roadmaps: {
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        }
       },
     });
 
@@ -90,18 +94,65 @@ export async function getUserContext() {
         bio: dbData.bio,
         experience: dbData.experience,
         industry: dbData.industry,
+        email: dbData.email,         // Add email
+        name: dbData.name,           // Add name
+        imageUrl: dbData.imageUrl,   // Add imageUrl
+        linkedin: dbData.linkedin    // Add linkedin
       },
+      industryData: dbData.industryInsight ? {
+        salaryRanges: dbData.industryInsight.salaryRanges,
+        growthRate: dbData.industryInsight.growthRate,
+        demandLevel: dbData.industryInsight.demandLevel,
+        topSkills: dbData.industryInsight.topSkills,
+        marketOutlook: dbData.industryInsight.marketOutlook,
+        keyTrends: dbData.industryInsight.keyTrends,
+        recommendedSkills: dbData.industryInsight.recommendedSkills
+      } : null,
       performance: {
-        assessments: dbData.assessments,
-        interviewAssess: dbData.interviewAssess,
+        assessments: dbData.assessments.map(assessment => ({
+          quizScore: assessment.quizScore,
+          category: assessment.category,
+          improvementTip: assessment.improvementTip,
+          questions: assessment.questions,
+          createdAt: assessment.createdAt
+        })),
+        interviewAssess: dbData.interviewAssess.map(interview => ({
+          interviewScore: interview.interviewScore,
+          category: interview.category,
+          domain: interview.domain,
+          improvementTip: interview.improvementTip,
+          questions: interview.questions,
+          createdAt: interview.createdAt
+        }))
       },
       documents: {
-        resume: dbData.resume,
-        coverLetter: dbData.coverLetter,
+        resume: dbData.resume.map(resume => ({
+          title: resume.title,
+          content: resume.content,
+          atsScore: resume.atsScore,
+          feedback: resume.feedback,
+          createdAt: resume.createdAt
+        })),
+        coverLetter: dbData.coverLetter.map(letter => ({
+          companyName: letter.companyName,
+          jobTitle: letter.jobTitle,
+          content: letter.content,
+          jobDescription: letter.jobDescription,
+          status: letter.status,
+          url: letter.url,
+          createdAt: letter.createdAt
+        }))
       },
+      roadmaps: dbData.roadmaps ? dbData.roadmaps.map(roadmap => ({
+        domain: roadmap.domain,
+        subdomain: roadmap.subdomain,
+        status: roadmap.status,
+        aiJson: roadmap.aiJson,
+        createdAt: roadmap.createdAt
+      })) : [],
       externalData: {
         github: githubData,
-      },
+      }
     };
 
     return context;

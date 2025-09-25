@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "./ui/button";
-import { ChevronDown, FileText, GraduationCapIcon,PictureInPicture2 ,LayoutDashboard, PenBox, StarsIcon,BotMessageSquare  } from "lucide-react";
+import { ChevronDown, FileText, GraduationCapIcon,PictureInPicture2 ,LayoutDashboard, PenBox, StarsIcon,BotMessageSquare ,MapPlus} from "lucide-react";
 import { checkUser } from "@/lib/checkUser";
 
 
@@ -46,6 +46,13 @@ async function  Header () {
                 <Button variant="outline">
                     <LayoutDashboard className="h-4 w-4"/>
                      <span className="hidden md:block"> Market Analysis </span>  
+                </Button>
+              </Link>
+
+              <Link href="/chatbot">
+                <Button variant="outline">
+                    <BotMessageSquare className="h-4 w-4"/>
+                     <span className="hidden md:block">Ai ChatBot</span>  
                 </Button>
               </Link>
 
@@ -89,10 +96,11 @@ async function  Header () {
                     </Link>
                 </DropdownMenuItem>
 
+
                 <DropdownMenuItem>
-                    <Link href={"/chatbot"} className="flex items-center gap-2">
-                        <BotMessageSquare  className="h-4 w-4"/>
-                        <span>Ai Chatbot</span>  
+                    <Link href={"/roadmap"} className="flex items-center gap-2">
+                        <MapPlus  className="h-4 w-4"/>
+                        <span>Create Roadmap</span>  
                     </Link>
                 </DropdownMenuItem>
 
