@@ -32,6 +32,7 @@ const DashboardView = ({ insights }) => {
   // Transform salary data for the chart
   const salaryData = insights.salaryRanges.map((range) => ({
     name: range.role,
+    location: range.location,
     min: range.min,
     max: range.max,
     median: range.median,
@@ -161,6 +162,7 @@ const DashboardView = ({ insights }) => {
             Displaying minimum, median, and maximum salaries 
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -169,22 +171,33 @@ const DashboardView = ({ insights }) => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-background border rounded-lg p-2 shadow-md">
-                          <p className="font-medium">{label}</p>
-                          {payload.map((item) => (
-                            <p key={item.name} className="text-sm">
-                              {item.name}: ₹{item.value}0000
-                            </p>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
+          content={({ active, payload, label }) => {
+            if (active && payload && payload.length) {
+              // Find the data object corresponding to the active bar
+              const dataPoint = salaryData.find(d => d.name === label);
+
+              return (
+                <div className="bg-background border rounded-lg p-2 shadow-md">
+                  {/* Display the role name */}
+                  <p className="font-medium">{label}</p>
+                  {/* Display the location if available */}
+                  {dataPoint?.location && (
+                    <p className="text-sm mb-1">
+                      Location: {dataPoint.location}
+                    </p>
+                  )}
+                  {/* Map over the salary values */}
+                  {payload.map((item) => (
+                    <p key={item.name} className="text-sm">
+                      {item.name}: ₹{item.value}0000
+                    </p>
+                  ))}
+                </div>
+              );
+            }
+            return null;
+          }}
+        />
                 <Bar dataKey="min" fill="#94a3b8" name="Min Salary " />
                 <Bar dataKey="median" fill="#64748b" name="Median Salary " />
                 <Bar dataKey="max" fill="#475569" name="Max Salary " />
@@ -192,6 +205,7 @@ const DashboardView = ({ insights }) => {
             </ResponsiveContainer>
           </div>
         </CardContent>
+
       </Card>
 
       {/* Industry Trends */}

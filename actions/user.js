@@ -84,6 +84,7 @@ export async function updateUser(data) {
     revalidatePath("/");
     return{ success: true, ...result};
   } catch (error) {
+    console.log(error)
     console.error("Error updating user and industry:", error);
     throw new Error("Failed to update profile");
   }

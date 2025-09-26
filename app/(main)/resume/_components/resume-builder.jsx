@@ -1,3 +1,17 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -37,6 +51,13 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { analyzeResumeWithAI } from "@/actions/resume";
 // import html2pdf from "html2pdf.js/dist/html2pdf.min.js";
+
+// import html2canvas from 'html2canvas';
+// import { jsPDF } from 'jspdf';
+
+// import fs from "fs";
+// import markdownpdf from "markdown-pdf";
+
 
 export default function ResumeBuilder({ initialContent, onSave }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -136,30 +157,60 @@ export default function ResumeBuilder({ initialContent, onSave }) {
   };
 
   const [isGenerating, setIsGenerating] = useState(false);
+// ================
 
-  const generatePDF = async () => {
-    setIsGenerating(true);
-    try {
-      // Dynamic import of html2pdf.js within the function
-      const html2pdf = (await import("html2pdf.js/dist/html2pdf.min.js"))
-        .default;
 
-      const element = document.getElementById("resume-pdf");
-      const opt = {
-        margin: [15, 15],
-        filename: "resume.pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      };
 
-      await html2pdf().set(opt).from(element).save();
-    } catch (error) {
-      console.error("PDF generation error:", error);
-    } finally {
-      setIsGenerating(false);
+
+const generatePDF = async () => {
+  setIsGenerating(true);
+  try {
+    // 1. Get the content (the markdown-rendered HTML)
+    // IMPORTANT: The MDEditor.Markdown component's output is what you need.
+    // The innerHTML of the hidden div is the easiest way to grab it.
+    const element = document.getElementById("resume-pdf");
+    if (!element) {
+      throw new Error("Resume content element not found.");
     }
-  };
+    const htmlContent = element.innerHTML;
+
+    // 2. Call the server-side API route
+    const response = await fetch('/api/generate-pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ htmlContent }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `PDF generation failed with status ${response.status}`);
+    }
+
+    // 3. Trigger the download in the browser
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title || 'resume'}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+
+    toast.success("PDF generated successfully!");
+
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    toast.error(error.message || "Failed to generate PDF. Check server logs.");
+  } finally {
+    setIsGenerating(false);
+  }
+};
+
+// ================
+
 
   const onSubmit = async (data) => {
     try {
