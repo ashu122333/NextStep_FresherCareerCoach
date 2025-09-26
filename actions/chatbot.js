@@ -16,8 +16,8 @@ const apiKey = process.env.GEMINI_API_KEY; // The API key is provided by the can
 
 
 function createSystemPrompt(userContext) {
-  // Extract full resume content and format it nicely
-  const latestResumes = userContext.documents.resume.map(r => `
+    // Safely extract full resume content and format it nicely
+    const latestResumes = (userContext.documents?.resume || []).map(r => `
     Resume: ${r.title}
     Content:
     ${r.content}
@@ -25,9 +25,27 @@ function createSystemPrompt(userContext) {
     Feedback: ${r.feedback || 'No feedback available'}
     Last Updated: ${new Date(r.createdAt).toLocaleDateString()}
     -------------------
-  `).join('\n');
+    `).join('\n');
 
-  return `
+    // Safely extract cover letter content
+    const coverLetters = (userContext.documents?.coverLetter || []).map(cl => `
+    Company: ${cl.companyName}
+    Position: ${cl.jobTitle}
+    Content:
+    ${cl.content}
+    Status: ${cl.status}
+    Job Description: ${cl.jobDescription || 'Not provided'}
+    -------------------
+    `).join('\n');
+
+    // Safely extract roadmaps content
+    const roadmaps = (userContext.roadmaps || []).map(r => `
+    - Domain: ${r.domain}
+    - Subdomain: ${r.subdomain}
+    - Status: ${r.status}
+    `).join('\n');
+
+    return `
     You are an expert AI Career Coach named "Pathfinder". Your goal is to provide personalized,
     actionable, and empathetic career guidance based on the user's provided context.
     
@@ -53,42 +71,51 @@ function createSystemPrompt(userContext) {
     ` : 'No industry data available'}
 
     Performance History:
-    - Recent Assessments: ${userContext.performance.assessments.map(a => `
+    - Recent Assessments: ${(userContext.performance?.assessments || []).map(a => `
       * Category: ${a.category}
       * Score: ${a.quizScore}
       * Key Improvement Area: ${a.improvementTip}
     `).join('\n')}
     
-    - Interview Assessments: ${userContext.performance.interviewAssess.map(i => `
+    // ⬇️ FIX APPLIED: Using '|| []' to prevent the map error at line 62 ⬇️
+    - Interview Assessments: ${(userContext.performance?.interviewAssess || []).map(i => `
       * Category: ${i.category}
       * Score: ${i.interviewScore}
       * Domain: ${i.domain.join(', ')}
       * Improvement Tip: ${i.improvementTip}
     `).join('\n')}
 
+    // ✨ NEW: Include InterviewSession data
+    - Mock Interview Sessions: ${(userContext.performance?.interviewSessions || []).map(s => `
+      * Type: ${s.sessionType} (${s.role} - ${s.difficulty})
+      * Overall Score: ${s.overallScore}
+      * Strengths: ${s.strengths?.join(', ')}
+      * Weaknesses: ${s.weaknesses?.join(', ')}
+      * Improvement Tips: ${s.improvementTips?.join(', ')}
+      * Detailed Feedback: ${s.detailedFeedback || 'N/A'}
+    `).join('\n')}
+
+    // ✨ NEW: Include CallAnalytics data
+    - Communication Analytics (from latest sessions): ${(userContext.analytics?.callAnalytics || []).map(c => `
+      * Session ID: ${c.sessionId}
+      * Duration: ${c.duration}s
+      * WPM: ${c.wordsPerMinute}
+      * Filler Words: ${c.fillerWordsCount}
+      * Silence Time: ${c.silenceTime}s
+      * Transcript Preview: "${c.transcriptPreview || 'No transcript available'}"
+    `).join('\n')}
+
     User's Resume History:
-    ${latestResumes}
+    ${latestResumes || 'No resume data available'}
 
     Cover Letters:
-    ${userContext.documents.coverLetter.map(cl => `
-    Company: ${cl.companyName}
-    Position: ${cl.jobTitle}
-    Content:
-    ${cl.content}
-    Status: ${cl.status}
-    Job Description: ${cl.jobDescription || 'Not provided'}
-    -------------------
-    `).join('\n')}
+    ${coverLetters || 'No cover letter data available'}
 
     Career Roadmaps:
-    ${userContext.roadmaps.map(r => `
-    - Domain: ${r.domain}
-    - Subdomain: ${r.subdomain}
-    - Status: ${r.status}
-    `).join('\n')}
+    ${roadmaps || 'No roadmap data available'}
 
     GitHub Profile:
-    ${userContext.externalData.github ? `
+    ${userContext.externalData?.github ? `
     - Top Languages: ${userContext.externalData.github.topLanguages.join(', ')}
     - Recent Projects: ${userContext.externalData.github.recentProjects.map(p => `
       * ${p.name}: ${p.description || 'No description'} (${p.language})
@@ -98,7 +125,7 @@ function createSystemPrompt(userContext) {
     Instructions for your responses:
     1. Use the complete resume content to provide detailed feedback on experience and skills
     2. Reference specific points from the user's resume when discussing career progression
-    3. Consider both resume content and assessment results when suggesting improvements
+    3. Consider both resume content, assessment results, and **interview/communication analytics** when suggesting improvements
     4. Leverage industry insights to align resume content with market demands
     5. When discussing resume improvements, cite specific ATS scores and feedback
     6. Be friendly, concise, and professional. Use encouraging and positive language
@@ -113,42 +140,106 @@ function createSystemPrompt(userContext) {
 }
 
 
+
 // function createSystemPrompt(userContext) {
-//   // Use a template literal to construct a detailed prompt.
+//   // Extract full resume content and format it nicely
+//   const latestResumes = userContext.documents.resume.map(r => `
+//     Resume: ${r.title}
+//     Content:
+//     ${r.content}
+//     ATS Score: ${r.atsScore || 'Not assessed'}
+//     Feedback: ${r.feedback || 'No feedback available'}
+//     Last Updated: ${new Date(r.createdAt).toLocaleDateString()}
+//     -------------------
+//   `).join('\n');
+
 //   return `
 //     You are an expert AI Career Coach named "Pathfinder". Your goal is to provide personalized,
 //     actionable, and empathetic career guidance based on the user's provided context.
     
-//     You have access to the following information about the user:
-//     - User Profile:
-//       - Skills: ${userContext.userProfile?.skills?.join(', ') || 'Not specified'}
-//       - Bio: ${userContext.userProfile?.bio || 'Not specified'}
-//       - Experience (years): ${userContext.userProfile?.experience || 'Not specified'}
-//       - Industry Goal: ${userContext.userProfile?.industry || 'Not specified'}
+//     User Profile:
+//     - Name: ${userContext.userProfile?.name || 'Not specified'}
+//     - Email: ${userContext.userProfile?.email || 'Not specified'}
+//     - Skills: ${userContext.userProfile?.skills?.join(', ') || 'Not specified'}
+//     - Bio: ${userContext.userProfile?.bio || 'Not specified'}
+//     - Experience (years): ${userContext.userProfile?.experience || 'Not specified'}
+//     - Industry: ${userContext.userProfile?.industry || 'Not specified'}
+//     - LinkedIn: ${userContext.userProfile?.linkedin || 'Not specified'}
 
-//     - Performance Data:
-//       - Most recent assessments: ${JSON.stringify(userContext.performance?.assessments) || 'No assessment data available'}
-//       - Most recent interview feedback: ${JSON.stringify(userContext.performance?.interviewAssess) || 'No interview data available'}
+//     Industry Insights:
+//     ${userContext.industryData ? `
+//     - Industry: ${userContext.userProfile.industry}
+//     - Growth Rate: ${userContext.industryData.growthRate}
+//     - Demand Level: ${userContext.industryData.demandLevel}
+//     - Market Outlook: ${userContext.industryData.marketOutlook}
+//     - Top Skills in Demand: ${userContext.industryData.topSkills?.join(', ')}
+//     - Key Industry Trends: ${userContext.industryData.keyTrends?.join(', ')}
+//     - Recommended Skills: ${userContext.industryData.recommendedSkills?.join(', ')}
+//     - Salary Ranges: ${JSON.stringify(userContext.industryData.salaryRanges)}
+//     ` : 'No industry data available'}
+
+//     Performance History:
+//     - Recent Assessments: ${userContext.performance.assessments.map(a => `
+//       * Category: ${a.category}
+//       * Score: ${a.quizScore}
+//       * Key Improvement Area: ${a.improvementTip}
+//     `).join('\n')}
     
-//     - Documents:
-//       - Latest Resume: ${userContext.documents?.resume?.content || 'No resume on file'}
-//       - Latest Cover Letter: ${userContext.documents?.coverLetter?.[0]?.content || 'No cover letter on file'}
-      
-//     - External Profile Data:
-//       - GitHub:
-//         - Top Languages: ${userContext.externalData?.github?.topLanguages?.join(', ') || 'Not specified'}
-//         - Recent Projects: ${JSON.stringify(userContext.externalData?.github?.recentProjects) || 'Not specified'}
-        
+//     - Interview Assessments: ${userContext.performance.interviewAssess.map(i => `
+//       * Category: ${i.category}
+//       * Score: ${i.interviewScore}
+//       * Domain: ${i.domain.join(', ')}
+//       * Improvement Tip: ${i.improvementTip}
+//     `).join('\n')}
+
+//     User's Resume History:
+//     ${latestResumes}
+
+//     Cover Letters:
+//     ${userContext.documents.coverLetter.map(cl => `
+//     Company: ${cl.companyName}
+//     Position: ${cl.jobTitle}
+//     Content:
+//     ${cl.content}
+//     Status: ${cl.status}
+//     Job Description: ${cl.jobDescription || 'Not provided'}
+//     -------------------
+//     `).join('\n')}
+
+//     Career Roadmaps:
+//     ${userContext.roadmaps.map(r => `
+//     - Domain: ${r.domain}
+//     - Subdomain: ${r.subdomain}
+//     - Status: ${r.status}
+//     `).join('\n')}
+
+//     GitHub Profile:
+//     ${userContext.externalData.github ? `
+//     - Top Languages: ${userContext.externalData.github.topLanguages.join(', ')}
+//     - Recent Projects: ${userContext.externalData.github.recentProjects.map(p => `
+//       * ${p.name}: ${p.description || 'No description'} (${p.language})
+//     `).join('\n')}
+//     ` : 'No GitHub data available'}
     
 //     Instructions for your responses:
-//     1. Acknowledge and use the provided context to inform your answers. If a piece of data is "not specified", you can ask the user for it.
-//     2. Be friendly, concise, and professional. Use encouraging and positive language.
-//     3. Your primary goal is to provide specific, actionable advice. If the user asks about skill development, recommend concrete steps. If they ask for interview help, suggest a specific practice area based on their history.
-//     4. Do not mention that you are an AI or that you are using an LLM. Your persona is "Pathfinder".
-//     5. Always assume the user's latest question is a new part of the conversation unless they explicitly reference a previous turn.
-//     6. If the user's request is outside the scope of career guidance (e.g., "Tell me a joke"), respond politely that you can only assist with career-related queries.
+//     1. Use the complete resume content to provide detailed feedback on experience and skills
+//     2. Reference specific points from the user's resume when discussing career progression
+//     3. Consider both resume content and assessment results when suggesting improvements
+//     4. Leverage industry insights to align resume content with market demands
+//     5. When discussing resume improvements, cite specific ATS scores and feedback
+//     6. Be friendly, concise, and professional. Use encouraging and positive language
+//     7. Provide specific, actionable advice based on the user's complete profile
+//     8. If certain data is "not specified", you can ask the user for it
+//     9. Focus on career guidance and professional development only
+//     10. Consider the user's experience level and industry when providing advice
+
+//     Remember: Your responses should demonstrate knowledge of the user's complete profile while 
+//     maintaining a supportive and professional tone. Always aim to provide actionable next steps.
 //     `;
 // }
+
+
+
 
 /**
  * Sends a chat message to the LLM and gets a response.

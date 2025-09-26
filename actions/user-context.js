@@ -62,6 +62,17 @@ export async function getUserContext() {
           orderBy: { createdAt: 'desc' },
           take: 3,
         },
+
+        interviewSessions:{
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+        callAnalytics: {
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+
+
         resume: true,
         coverLetter: {
           orderBy: { createdAt: 'desc' },
@@ -108,32 +119,63 @@ export async function getUserContext() {
         keyTrends: dbData.industryInsight.keyTrends,
         recommendedSkills: dbData.industryInsight.recommendedSkills
       } : null,
+
       performance: {
-        assessments: dbData.assessments.map(assessment => ({
+        assessments: (dbData.assessments || []).map(assessment => ({
           quizScore: assessment.quizScore,
           category: assessment.category,
           improvementTip: assessment.improvementTip,
           questions: assessment.questions,
           createdAt: assessment.createdAt
         })),
-        interviewAssess: dbData.interviewAssess.map(interview => ({
-          interviewScore: interview.interviewScore,
-          category: interview.category,
-          domain: interview.domain,
-          improvementTip: interview.improvementTip,
-          questions: interview.questions,
-          createdAt: interview.createdAt
-        }))
+        interviewSessions: (dbData.interviewSessions || []).map(session => ({
+        sessionType: session.sessionType,
+        industry: session.industry,
+        difficulty: session.difficulty,
+       overallScore: session.overallScore,
+       strengths: session.strengths,
+        weaknesses: session.weaknesses,
+        improvementTips: session.improvementTips,
+        detailedFeedback: session.detailedFeedback,
+        status: session.status,
+        role: session.role,
+        endedAt: session.endedAt,
+        createdAt: session.createdAt
+         })),
+        // interviewAssess: dbData.interviewAssess.map(interview => ({
+        //   interviewScore: interview.interviewScore,
+        //   category: interview.category,
+        //   domain: interview.domain,
+        //   improvementTip: interview.improvementTip,
+        //   questions: interview.questions,
+        //   createdAt: interview.createdAt
+        // }))
       },
+
+      // ✨ NEW: New 'analytics' section for CallAnalytics
+      analytics: {
+      callAnalytics: (dbData.callAnalytics || []).map(call => ({
+      sessionId: call.sessionId,
+      duration: call.duration,
+      transcriptPreview: call.transcript ? call.transcript.substring(0, 200) + (call.transcript.length > 200 ? '...' : '') : null,
+      speakingTime: call.speakingTime,
+      silenceTime: call.silenceTime,
+      wordsPerMinute: call.wordsPerMinute,
+      fillerWordsCount: call.fillerWordsCount,
+      endedAt: call.endedAt,
+      createdAt: call.createdAt
+      }))
+      },
+
       documents: {
-        resume: dbData.resume.map(resume => ({
+        resume: (dbData.resume || []).map(resume => ({
           title: resume.title,
           content: resume.content,
           atsScore: resume.atsScore,
           feedback: resume.feedback,
           createdAt: resume.createdAt
         })),
-        coverLetter: dbData.coverLetter.map(letter => ({
+        coverLetter: (dbData.coverLetter || []).map(letter => ({
           companyName: letter.companyName,
           jobTitle: letter.jobTitle,
           content: letter.content,
@@ -142,6 +184,7 @@ export async function getUserContext() {
           url: letter.url,
           createdAt: letter.createdAt
         }))
+
       },
       roadmaps: dbData.roadmaps ? dbData.roadmaps.map(roadmap => ({
         domain: roadmap.domain,
