@@ -3,7 +3,7 @@
 import { getUserContext } from './user-context';
 
 // The API endpoint for the LLM
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
+const API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=";
 const apiKey = process.env.GEMINI_API_KEY; // The API key is provided by the canvas environment.
 
 /**
